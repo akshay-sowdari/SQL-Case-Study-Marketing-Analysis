@@ -1,0 +1,212 @@
+-- 1)
+-- SELECT
+-- 	mc.campaign_name, count(t.transaction_id) as 'transactions_per_campaign' 
+-- FROM
+-- 	transactions t 
+-- INNER JOIN 
+-- 	marketing_campaigns mc 
+-- ON
+-- 	t.product_id=mc.product_id
+-- GROUP BY
+-- 	t.product_id ;
+
+-- 2)
+-- SELECT
+-- 	sc.product_name,t.product_id, sum(t.quantity) as sales_quantity 
+-- FROM
+-- 	sustainable_clothing sc
+-- INNER JOIN 
+-- 	transactions t 
+-- ON 
+-- 	sc.product_id=t.product_id 
+-- GROUP BY 
+-- 	t.product_id 
+-- ORDER BY 
+-- 	sales_quantity DESC 
+-- LIMIT 1;
+
+
+-- 3)
+-- SELECT
+--     mc.campaign_name,
+--     round(SUM(sc.price * t.quantity),2) AS total_revenue
+-- FROM
+--     marketing_campaigns AS mc
+-- LEFT JOIN
+--     transactions AS t ON mc.product_id = t.product_id
+-- INNER JOIN
+--     sustainable_clothing AS sc ON t.product_id = sc.product_id
+-- GROUP BY
+--     mc.campaign_name
+-- ORDER BY
+--     total_revenue DESC;
+    
+    
+-- 4)
+-- SELECT 
+-- 	sc.category, 
+--     round(sum(sc.price*t.quantity),2) as Revenue_Generated
+-- FROM 
+-- 	sustainable_clothing sc 
+-- INNER JOIN 
+-- 	transactions t 
+-- ON 
+-- 	sc.product_id = t.product_id
+-- GROUP BY 
+-- 	sc.category 
+-- ORDER BY 
+-- 	Revenue_Generated DESC 
+-- LIMIT 1;
+
+
+-- 5)
+-- SELECT 
+-- 	sc.product_id, sc.product_name, 
+--     sum(t.quantity) as 'quantity'
+-- FROM
+-- 	sustainable_clothing sc 
+-- INNER JOIN
+-- 	transactions t
+-- ON
+-- 	sc.product_id = t.product_id 
+-- GROUP BY 
+-- 	sc.product_name 
+-- HAVING 
+-- 	sum(t.quantity) > (select avg(t.quantity) from transactions t);
+
+-- 6)
+-- SELECT 
+-- 	mc.campaign_name, t.purchase_date , 
+-- 	round(avg(sc.price*t.quantity),2) as Revenue_Generated 
+-- FROM 
+-- 	marketing_campaigns mc
+-- LEFT JOIN 
+-- 	sustainable_clothing sc 
+-- ON
+--     mc.product_id = sc.product_id
+-- INNER JOIN 
+-- 	transactions t
+-- ON 
+-- 	sc.product_id = t.product_id
+-- GROUP BY
+-- 	t.purchase_date;
+
+-- 7) Method - 1
+-- SELECT 
+-- 	A.product_name,
+--     A.total_revenue, 
+-- 	round((A.total_revenue/A.total_sum)*100,2) as percent_share
+-- FROM
+-- 	(SELECT
+--         sc.product_name,
+--         ROUND(SUM(sc.price * t.quantity), 2) AS total_revenue,
+--         (SELECT 
+-- 			round(SUM(sc.price * t.quantity),2) AS total_revenue
+-- 		FROM 
+-- 			transactions t
+-- 		JOIN 
+-- 			sustainable_clothing sc ON t.product_id = sc.product_id
+-- 		) AS total_sum
+--     FROM
+--         transactions AS t
+--     JOIN
+--         sustainable_clothing AS sc ON t.product_id = sc.product_id
+--     GROUP BY
+--         sc.product_name
+--     ORDER BY
+--         total_revenue DESC
+-- 	)
+-- AS A
+
+
+-- Method 2 
+-- SELECT
+--     A.product_name,
+--     A.total_revenue,
+--     (A.total_revenue / total_sum.total_revenue) * 100 AS percent_share
+-- FROM
+--     (
+--         SELECT
+--             sc.product_name,
+--             ROUND(SUM(sc.price * t.quantity), 2) AS total_revenue
+--         FROM
+--             transactions AS t
+--         JOIN
+--             sustainable_clothing AS sc ON t.product_id = sc.product_id
+--         GROUP BY
+--             sc.product_name
+--         ORDER BY
+--             total_revenue DESC
+--     ) AS A
+-- CROSS JOIN
+--     (
+--         SELECT SUM(sc.price * t.quantity) AS total_revenue
+--         FROM transactions AS t
+--         JOIN sustainable_clothing AS sc ON t.product_id = sc.product_id
+--     ) AS total_sum;
+
+
+
+-- 8)
+-- SELECT
+-- 	avg(t.quantity) AS 'quantity sold during campaigns'
+-- FROM 
+-- 	transactions t
+-- INNER JOIN 
+-- 	marketing_campaigns mc 
+-- ON
+-- 	t.product_id= mc.product_id;
+
+-- SELECT 
+-- 	avg(t.quantity) as 'quantity sold non-campaign'
+-- FROM 
+-- 	transactions t
+-- WHERE 
+-- 	t.product_id 
+-- NOT IN
+-- 	(SELECT product_id 
+--     FROM marketing_campaigns)
+
+-- 9)
+-- SELECT
+-- 	round(sum(sc.price*t.quantity),2) as Revenue_Generated
+-- FROM
+-- 	marketing_campaigns mc 
+-- LEFT JOIN 
+-- 	sustainable_clothing sc 
+-- ON 
+--     mc.product_id = sc.product_id 
+-- INNER JOIN 
+-- 	transactions t 
+-- ON 
+-- 	sc.product_id = t.product_id;
+--  
+-- SELECT 
+-- 	round(sum(sc.price*t.quantity),2) as Revenue_Generated_Non_Campaign 
+-- FROM
+-- 	sustainable_clothing sc 
+-- INNER JOIN 
+-- 	transactions t
+-- ON
+-- 	sc.product_id = t.product_id 
+-- WHERE
+-- 	t.product_id
+-- NOT IN 
+-- 	(SELECT product_id 
+--     FROM marketing_campaigns)
+
+-- 10)
+-- SELECT 
+-- 	sc.product_name, 
+-- 	sum(t.quantity) AS quantity_sold,
+-- 	RANK() OVER (ORDER BY SUM(t.quantity) DESC) AS ranking
+-- FROM 
+-- 	sustainable_clothing sc 
+-- INNER JOIN
+-- 	transactions t 
+-- ON
+-- 	sc.product_id = t.product_id 
+-- GROUP BY 
+-- 	sc.product_name 
+-- ORDER BY
+-- 	ranking
